@@ -6,7 +6,7 @@ const GitClient = require("./git/client");
 
 const gitClient = new GitClient();
 
-const { CatFileCommand } = require("./git/commands");
+const { CatFileCommand, HashObjectCommand } = require("./git/commands");
 
 const command = process.argv[2];
 
@@ -16,6 +16,9 @@ switch (command) {
     break;
   case "cat-file":
     logObjectToConsole();
+    break;
+  case "hash-object":
+    hashObject();
     break;
   default:
     throw new Error(`Unknown command ${command}`);
@@ -39,5 +42,16 @@ function logObjectToConsole() {
   const flag = process.argv[3];
   const sha = process.argv[4];
   const command = new CatFileCommand(flag, sha);
+  gitClient.run(command);
+}
+
+function hashObject() {
+  let flag = process.argv[3];
+  let filepath = process.argv[4];
+  if (!filepath) {
+    filepath = flag;
+    flag = null;
+  }
+  const command = new HashObjectCommand(flag, filepath);
   gitClient.run(command);
 }
