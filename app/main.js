@@ -5,26 +5,32 @@ const GitClient = require("./git/client");
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 
 const gitClient = new GitClient();
-
-const { CatFileCommand, HashObjectCommand } = require("./git/commands");
+const {
+  CatFileCommand,
+  HashObjectCommand,
+  LSTreeCommand,
+} = require("./git/commands");
 
 const command = process.argv[2];
 
 switch (command) {
   case "init":
-    createGitDirectory();
+    handleGitInitCommand();
     break;
   case "cat-file":
-    logObjectToConsole();
+    handleCatFileCommand();
     break;
   case "hash-object":
-    hashObject();
+    handleHashObjectCommand();
+    break;
+  case "ls-tree":
+    handleLSTreeCommand();
     break;
   default:
-    throw new Error(`Unknown command ${command}`);
+    throw new Error(`Unknown command: ${command}`);
 }
 
-function createGitDirectory() {
+function handleGitInitCommand() {
   fs.mkdirSync(path.join(process.cwd(), ".git"), { recursive: true });
   fs.mkdirSync(path.join(process.cwd(), ".git", "objects"), {
     recursive: true,
@@ -38,14 +44,14 @@ function createGitDirectory() {
   console.log("Initialized git directory");
 }
 
-function logObjectToConsole() {
+function handleCatFileCommand() {
   const flag = process.argv[3];
   const sha = process.argv[4];
   const command = new CatFileCommand(flag, sha);
   gitClient.run(command);
 }
 
-function hashObject() {
+function handleHashObjectCommand() {
   let flag = process.argv[3];
   let filepath = process.argv[4];
   if (!filepath) {
@@ -53,5 +59,17 @@ function hashObject() {
     flag = null;
   }
   const command = new HashObjectCommand(flag, filepath);
+  gitClient.run(command);
+}
+
+function handleLSTreeCommand() {
+  const flag = process.argv[3];
+  const sha = process.argv[4];
+  if (!sha && flag === "--name-only") return;
+  if (!sha) {
+    sha = flag;
+    flag = null;
+  }
+  const command = new LSTreeCommand(flag, sha);
   gitClient.run(command);
 }
