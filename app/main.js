@@ -2,14 +2,13 @@ const fs = require("fs");
 const path = require("path");
 const GitClient = require("./git/client");
 
-// You can use print statements as follows for debugging, they'll be visible when running tests.
-
 const gitClient = new GitClient();
 const {
   CatFileCommand,
   HashObjectCommand,
   LSTreeCommand,
   WriteTreeCommand,
+  CommitTreeCommand,
 } = require("./git/commands");
 
 const command = process.argv[2];
@@ -30,6 +29,9 @@ switch (command) {
   case "write-tree":
     handleWriteTreeCommand();
     break;
+  case "commit-tree":
+    handleCommitTreeCommand();
+    break;
   default:
     throw new Error(`Unknown command: ${command}`);
 }
@@ -40,7 +42,6 @@ function handleGitInitCommand() {
     recursive: true,
   });
   fs.mkdirSync(path.join(process.cwd(), ".git", "refs"), { recursive: true });
-
   fs.writeFileSync(
     path.join(process.cwd(), ".git", "HEAD"),
     "ref: refs/heads/main\n",
@@ -80,5 +81,13 @@ function handleLSTreeCommand() {
 
 function handleWriteTreeCommand() {
   const command = new WriteTreeCommand();
+  gitClient.run(command);
+}
+
+function handleCommitTreeCommand() {
+  const treeSha = process.argv[3];
+  const commitSha = process.argv[5];
+  const message = process.argv[7];
+  const command = new CommitTreeCommand(treeSha, commitSha, message);
   gitClient.run(command);
 }
